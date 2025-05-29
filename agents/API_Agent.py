@@ -9,7 +9,7 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 api_key = os.getenv("GROQ_API_KEY")
-# Define the decorated Yahoo Finance news tool with text splitter
+
 @tool
 def yahoo_finance_news(query: str) -> List[str]:
     """
