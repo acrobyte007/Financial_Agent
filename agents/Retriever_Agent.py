@@ -44,3 +44,23 @@ def get_chunks(query:str):
     for res in results:
         list_of_chunks.append(res.page_content)
     return list_of_chunks
+
+
+if __name__ == "__main__":
+    test_chunks = [
+        "Apple stock is performing well this quarter.",
+        "Microsoft announced new cloud services.",
+        "Google faces antitrust scrutiny from regulators.",
+        "Amazon's AWS growth slows down in Q2.",
+        "Tesla's new factory opens in Germany."
+    ]
+
+    print("[DEBUG] Starting embedding process...")
+    embed_chunks(test_chunks)
+
+    print("[DEBUG] Performing similarity search for: 'cloud services'")
+    similar = get_chunks("cloud services")
+
+    print("[DEBUG] Top 5 similar chunks:")
+    for chunk in similar:
+        print("-", chunk)

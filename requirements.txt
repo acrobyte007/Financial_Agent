@@ -1,0 +1,8 @@
+langchain
+langgraph
+fastapi
+yfinance
+pydantic
+langchain-openai
+langchain-community
+langchain_groq 

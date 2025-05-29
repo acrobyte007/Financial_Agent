@@ -1,13 +1,21 @@
 import os
 from dotenv import load_dotenv
-import whisper
+import speech_recognition as sr
 from gtts import gTTS
 
 load_dotenv()
 
 def voice_to_text(audio_path: str) -> str:
-    model = whisper.load_model("base")
-    return model.transcribe(audio_path)["text"]
+    recognizer = sr.Recognizer()
+    with sr.AudioFile(audio_path) as source:
+        audio = recognizer.record(source)
+
+    try:
+        return recognizer.recognize_google(audio)
+    except sr.UnknownValueError:
+        return "Could not understand audio."
+    except sr.RequestError as e:
+        return f"API request error: {e}"
 
 def text_to_voice(text: str, output_path: str = "./output/output_speech.mp3") -> str:
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
@@ -16,7 +24,7 @@ def text_to_voice(text: str, output_path: str = "./output/output_speech.mp3") ->
     return output_path
 
 if __name__ == "__main__":
-    audio_file = "input.wav"  # Input audio file
+    audio_file = "sample.wav"  # Use a WAV file here
     llm_response = "This is the LLM response."  # Replace with real response
 
     transcribed = voice_to_text(audio_file)

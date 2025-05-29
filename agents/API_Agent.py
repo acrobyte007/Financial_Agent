@@ -98,6 +98,7 @@ def get_data(request: dict) -> Dict[str, Any]:
 groq_model = ChatGroq(
     model_name="llama3-8b-8192",
     groq_api_key=api_key,
+    max_retries=1
 )
 
 # Update the agent to include both tools

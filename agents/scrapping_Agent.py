@@ -159,7 +159,7 @@ def get_relevant_articles_from_prompt(prompt):
 
     feed = data.get('feed', [])
     all_docs = []
-    splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
+    splitter = RecursiveCharacterTextSplitter(chunk_size=300, chunk_overlap=30)
 
     for item in feed:
         ticker_sentiment = item.get('ticker_sentiment', [])
