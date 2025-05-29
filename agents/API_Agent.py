@@ -5,7 +5,10 @@ from langchain_core.tools import tool
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from typing import List, Dict, Any
 from pydantic import BaseModel
-
+import os
+from dotenv import load_dotenv
+load_dotenv()
+api_key = os.getenv("GROQ_API_KEY")
 # Define the decorated Yahoo Finance news tool with text splitter
 @tool
 def yahoo_finance_news(query: str) -> List[str]:
@@ -23,7 +26,7 @@ def yahoo_finance_news(query: str) -> List[str]:
     
     # Fetch news using the Yahoo Finance tool
     news_content = YahooFinanceNewsTool().run(query)
-    
+    print("Fetched news content is called")
     # Split the news content into chunks
     try:
         chunks = text_splitter.split_text(news_content)
@@ -37,10 +40,12 @@ class FinanceData(BaseModel):
 
 @tool
 def get_data(request: dict) -> Dict[str, Any]:
+    
     """
     Retrieves historical stock data, current price, and options data for given tickers and time range.
     Input format: {"tickers": ["MSFT", "AAPL"], "time_range": "1mo"}
     """
+    print("get_data called")
     if not isinstance(request, dict):
         return {"error": "Input must be a dict with 'tickers' and 'time_range'."}
     
@@ -86,30 +91,53 @@ def get_data(request: dict) -> Dict[str, Any]:
             "current_price": current_price,
             "options": options_data
         }
-
+    print("Data fetched successfully")
     return data
 
 # Define the Groq LLM
 groq_model = ChatGroq(
     model_name="llama3-8b-8192",
-    groq_api_key="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"
+    groq_api_key=api_key,
 )
 
 # Update the agent to include both tools
 agent = create_react_agent(
     model=groq_model,
     tools=[get_data, yahoo_finance_news],  
-    prompt="""You are a helpful financial assistant. When the user asks about a company or stock,
-you should use the yahoo_finance_news tool to fetch and summarize the latest related news in chunks.
-Use the get_data tool to retrieve stock data if requested. Provide concise summaries of key events."""
+    prompt="""You are a helpful financial assistant. When the user asks about a company or stock:
+1.Use the yahoo_finance_news tool to fetch and summarize the latest news in concise chunks.
+2.Use the get_data tool to retrieve real-time stock prices and historical performance (e.g., daily, weekly, monthly).
+3.Present data in a readable, human-friendly format, including stock price trends, volume changes, and key metrics.
+4.Clearly label the timeframe for historical data and highlight notable events or shifts.
+5.Keep summaries clear, focused, and concise for quick understanding."""
 )
 
-# Input from user
-final_prompt = "What happened today with Microsoft stocks?"
+def run_financial_assistant(user_prompt: str):
+    # Modify the prompt inline with required instructions
+    modified_prompt = f"""
+You are a helpful financial assistant.
 
-# Run the agent
-response = agent.invoke({
-    "messages": [{"role": "user", "content": final_prompt}]
-})
+The user has asked: "{user_prompt}"
 
-print(response["messages"][-1].content)
+Instructions:
+- In 500 words
+- Use the yahoo_finance_news tool to fetch and summarize the latest related news in concise chunks.
+- Use the get_data tool to retrieve both real-time and historical stock data (daily, weekly, monthly).
+- Present stock prices, trends, volume, and key metrics in a clear, human-readable format.
+- Highlight any important market events or sudden changes.
+- Ensure the timeframe is mentioned when showing historical data.
+- Keep responses clear, concise, and easy to interpret.
+"""
+
+    # Run the agent
+    response = agent.invoke({
+        "messages": [{"role": "user", "content": modified_prompt}]
+    })
+
+    # Output the final response
+    return (response["messages"][-1].content)
+
+
+if __name__ == "__main__":
+    user_input = "What happened today with Microsoft stocks?"
+    print(run_financial_assistant(user_input))
